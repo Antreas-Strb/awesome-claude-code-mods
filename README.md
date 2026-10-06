@@ -65,6 +65,7 @@ Read the mod's source and access details before installing. Validation checks th
 - [weektoken](https://github.com/3dnow/claude-mods/tree/main/weektoken) - Pace for the 5-hour, 7-day and per-model weekly limits such as Fable, shown as usage against elapsed time above the prompt, plus a `/weektoken` pane with a run-out forecast and a burn-up chart of past windows.
 - [clawd-dash](https://github.com/pinkpixel-dev/clawd-dash) - A three-column dashboard under the prompt with 5-hour, 7-day and context gauges, model, effort, cost, session stats, git status and file changes, plus an animated pixel Clawd that works, celebrates and relaxes along with the session.
 - [context-bar](https://github.com/hamzafer/claude-code-mods/tree/main/mods/context-bar) - The context window as one stacked bar above the prompt, a color per category like `/context`, with token counts and the compaction point.
+- [glanceflow](https://github.com/Antreas-Strb/glanceflow) - A calm checklist above the prompt with Claude's plan in plain English, each step's progress and time left, a clear Needs you, and History with a daily team report.
 
 ## While you wait
 
