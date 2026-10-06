@@ -74,6 +74,7 @@ Read the mod's source and access details before installing. Validation checks th
 - [cc-pokedex](https://github.com/deonmenezes/claude-mods-pokedex) - Wild creatures appear above the prompt based on where your prompt leads.
 - [nibbl](https://github.com/nuromirzak/nibbl) - A pixel pet above the prompt that drops a bug when a tool fails and eats it when a test, lint or build passes; syncs event types and times to its own server.
 - [time](https://github.com/diegorv/claude-functions-hook/tree/main/plugins/time) - The time you sent each message, drawn above it.
+- [combo-meter](https://github.com/SARTHAK2511/claude-combo) - A fighting-game combo counter above the prompt: every clean tool call is a hit and every error breaks the chain, with D to SSS ranks, special moves like a red-to-green test, a pixel-art counter, toasts, chiptune effects on macOS and an all-time record, making no network calls.
 - [boss-fight](https://github.com/OneWave-AI/claude-code-mods/tree/main/boss-fight) - Failing tests spawn a pixel boss with one HP per failure, and each run that fixes tests lands a hit.
 - [intermission](https://github.com/jarrodwatts/intermission) - Doom deathmatch in a Ghostty or kitty pane on macOS 15+, returning you to Claude when it finishes or needs input; downloads and runs Odamex and connects to a shared game server.
 - [spinner](https://github.com/hoobnn/hoobnn-agent-mods/tree/main/claude-code/spinner) - Pixel-art scenes above the prompt while a turn runs, in fourteen themes, with a pet that follows the running tool, levels up and gets a confetti finale.

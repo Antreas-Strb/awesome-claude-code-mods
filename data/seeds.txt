@@ -17,6 +17,7 @@ hellosverre/claude-skins
 augiefra/claude-mods
 nuromirzak/nibbl
 augbastos/afkswitch
+SARTHAK2511/claude-combo
 ljmerza/prompt-spellcheck
 scasella/claude-flightdeck
 pawandeepdhall/claude-mods
