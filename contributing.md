@@ -79,6 +79,10 @@ Each scheduled scan runs this renderer and includes the updated README count, ca
 
 Approved seed additions use the separate automatic publication path above. Broader discovery, updates to existing mods and retirement proposals still require review of their generated PRs.
 
+The nightly scan reuses its completed results when main advances during publication. It preserves repository records changed on main since the scan started, including additions and retirements, then regenerates the catalogue and website using current main. New seeds that were not scanned stay candidates for seed publication. Up to eight publication attempts reuse the same scan; they do not repeat discovery or validation.
+
+Main pushes and completed seed-publication runs also refresh an open nightly scan PR without rescanning. These runs share the scan queue, so a batch of merges can replace an older pending run; the surviving run reads current main. An active scan is not cancelled. The scan PR still needs your review and merge. Changes to scanner inputs or classification rules require a fresh scan, as do conflicting duplicate decisions or concurrent records validated with a different version. Weekly retirement PRs retain their separate review workflow.
+
 Search, filtering and sorting run in the browser; the full collection remains readable without JavaScript. Search stays above the results while browsing. The page follows the system's light or dark appearance through `prefers-color-scheme`.
 
 Run `npm run test:render` to check the generated page and its browser interactions. Preview the `docs/` folder with a local static server. GitHub Pages serves this folder, with the domain in `docs/CNAME`.
