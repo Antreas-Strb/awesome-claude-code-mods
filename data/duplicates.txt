@@ -47,3 +47,8 @@ griches/claude-xcode-mod:. griches/xcpane:.
 roy651/cc-bearings:plugins/bearings roy651/cc-plugins:plugins/bearings
 brunolca/claude-agents-proto-mode:. brunolca/claude-plugins:plugins/prototype-mode
 brunolca/claude-code-terminal:plugins/worktree-terminal brunolca/claude-plugins:plugins/worktree-terminal
+michelr/query-table:. michelr/dotclaude:plugins/query-table
+SApplefeld/agent_persona:. SApplefeld/claude-kit:plugins/personas
+Zaho92/claude-arcade:. Zaho92/claude-arcade:plugin
+bsamiee/Rasm:.claude/plugins/function-hooks bsamiee/Rasm:plugins/function-hooks
+xsyetopz/dotclaude:. xsyetopz/dotclaude:plugins/dotclaude

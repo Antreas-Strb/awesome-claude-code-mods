@@ -125468,7 +125468,7 @@
       "author": "zaho92",
       "homepage": "https://github.com/zaho92/claude-arcade",
       "url": "https://github.com/Zaho92/claude-arcade",
-      "kind": "mod",
+      "kind": "duplicate",
       "hasManifest": true,
       "modules": [
         "./register.tsx"
@@ -125590,7 +125590,8 @@
         "status": "warnings",
         "claudeVersion": "2.1.288",
         "errors": []
-      }
+      },
+      "duplicateOf": "Zaho92/claude-arcade:plugin"
     },
     {
       "id": "Zaho92/claude-arcade:plugin",
@@ -149531,7 +149532,7 @@
       "author": "Bardia Samiee",
       "homepage": "https://github.com/bsamiee/Rasm",
       "url": "https://github.com/bsamiee/Rasm/tree/main/.claude/plugins/function-hooks",
-      "kind": "mod",
+      "kind": "duplicate",
       "hasManifest": true,
       "modules": [
         "./register.ts"
@@ -149622,7 +149623,8 @@
         "status": "warnings",
         "claudeVersion": "2.1.289",
         "errors": []
-      }
+      },
+      "duplicateOf": "bsamiee/Rasm:plugins/function-hooks"
     },
     {
       "id": "bsamiee/Rasm:plugins/function-hooks",
@@ -225166,7 +225168,7 @@
       "author": "Michel Radosavljevic",
       "homepage": "https://github.com/michelr/query-table",
       "url": "https://github.com/michelr/query-table",
-      "kind": "mod",
+      "kind": "duplicate",
       "hasManifest": true,
       "modules": [
         "./register.tsx"
@@ -225235,7 +225237,8 @@
       "createdAt": "2026-10-03T15:27:53Z",
       "license": null,
       "archived": true,
-      "defaultBranch": "main"
+      "defaultBranch": "main",
+      "duplicateOf": "michelr/dotclaude:plugins/query-table"
     },
     {
       "id": "midudev/after-for-claude-code:.",
@@ -254377,7 +254380,7 @@
       "author": "Dreamed up by Scott Applefeld, built by Claude",
       "homepage": "https://github.com/SApplefeld/agent_persona",
       "url": "https://github.com/SApplefeld/agent_persona",
-      "kind": "mod",
+      "kind": "duplicate",
       "hasManifest": true,
       "modules": [
         "./index.ts"
@@ -254476,7 +254479,8 @@
       "createdAt": "2026-09-11T11:33:48Z",
       "license": null,
       "archived": false,
-      "defaultBranch": "main"
+      "defaultBranch": "main",
+      "duplicateOf": "SApplefeld/claude-kit:plugins/personas"
     },
     {
       "id": "Sarimarcus/claude-code-plugins:plugins/linear-workflow",
@@ -290092,7 +290096,7 @@
       "author": "xsyetopz",
       "homepage": "https://github.com/xsyetopz/dotclaude",
       "url": "https://github.com/xsyetopz/dotclaude",
-      "kind": "mod",
+      "kind": "duplicate",
       "hasManifest": true,
       "modules": [
         "./register.mjs"
@@ -290183,7 +290187,8 @@
         "status": "passed",
         "claudeVersion": "2.1.289",
         "errors": []
-      }
+      },
+      "duplicateOf": "xsyetopz/dotclaude:plugins/dotclaude"
     },
     {
       "id": "xyjk0511/idle-compact:plugins/idle-compact",
