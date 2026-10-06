@@ -66,7 +66,7 @@ test('visibility names what a hook can observe', () => {
 })
 
 import { fingerprint, describeChange, looksPartial } from './changed.mjs'
-import { applyDuplicates, suspectDuplicates, readDuplicates } from './dedupe.mjs'
+import { applyDuplicates, applyDuplicatesWithRenames, suspectDuplicates, readDuplicates, renamePairs } from './dedupe.mjs'
 import { kindOf, readCatalogs } from './kind.mjs'
 
 const base = { claudeVersion: '2.1.272', mods: [
@@ -111,6 +111,50 @@ test('a listed duplicate collapses onto its successor; an unlisted same-owner sa
   assert.deepEqual(listed[0], ['galElmalah/claude-queue-plugin:.', 'galElmalah/claude-mods:claude-queue'])
   for (const pair of listed) assert.ok(pair.length === 2 && pair.every(id => /^[\w.-]+\/[\w.-]+:\S+$/.test(id)) && pair[0] !== pair[1], pair.join(' '))
   assert.deepEqual([...readDuplicates('data/no-such-file.txt')], [])
+})
+
+test('a repository GitHub reports under a new name collapses onto that name', () => {
+  const mods = [
+    { id: 'o/old-name:plugins/a', repo: 'o/old-name', path: 'plugins/a', kind: 'mod' },
+    { id: 'o/old-name:plugins/b', repo: 'o/old-name', path: 'plugins/b', kind: 'mod' },
+    { id: 'O/New-Name:plugins/a', repo: 'O/New-Name', path: 'plugins/a', kind: 'mod' },
+    { id: 'o/mono:x', repo: 'o/mono', path: 'x', kind: 'mod' },
+    { id: 'o/standalone:.', repo: 'o/standalone', path: '.', kind: 'mod' },
+  ]
+  const currentName = new Map([['o/old-name', 'o/new-name'], ['o/new-name', 'O/New-Name'], ['o/mono', 'o/mono'], ['o/standalone', 'o/standalone']])
+  const fresh = new Set(mods.map(m => m.id))
+  const pairs = renamePairs(mods, currentName, fresh)
+  assert.deepEqual([...pairs], [['o/old-name:plugins/a', 'O/New-Name:plugins/a']], 'only a plugin whose new-name copy was scanned, repository matched without regard to case')
+  const applied = applyDuplicates(structuredClone(mods), pairs)
+  assert.deepEqual(applied.filter(m => m.kind === 'mod').map(m => m.id), ['o/old-name:plugins/b', 'O/New-Name:plugins/a', 'o/mono:x', 'o/standalone:.'])
+  assert.equal(renamePairs(mods, new Map(), fresh).size, 0, 'no metadata, no collapse')
+  const stale = new Set([...fresh].filter(id => id !== 'O/New-Name:plugins/a'))
+  assert.equal(renamePairs(mods, currentName, stale).size, 0, 'a retained record of a failed clone never hides a fresh copy')
+})
+
+test('rename pairs keep plugin paths case-sensitive', () => {
+  const mods = [
+    { id: 'o/old:plugins/A', repo: 'o/old', path: 'plugins/A', kind: 'mod' },
+    { id: 'o/old:plugins/a', repo: 'o/old', path: 'plugins/a', kind: 'mod' },
+    { id: 'o/new:plugins/A', repo: 'o/new', path: 'plugins/A', kind: 'mod' },
+    { id: 'o/new:plugins/a', repo: 'o/new', path: 'plugins/a', kind: 'mod' },
+  ]
+  const pairs = renamePairs(mods, new Map([['o/old', 'o/new'], ['o/new', 'o/new']]), new Set(mods.map(m => m.id)))
+  assert.deepEqual([...pairs], [['o/old:plugins/A', 'o/new:plugins/A'], ['o/old:plugins/a', 'o/new:plugins/a']])
+})
+
+test('a rename and a listed move together leave one copy counted', () => {
+  const mods = () => [
+    { id: 'o/old:.', repo: 'o/old', path: '.', kind: 'mod' },
+    { id: 'o/new:.', repo: 'o/new', path: '.', kind: 'mod' },
+    { id: 'o/market:p', repo: 'o/market', path: 'p', kind: 'mod' },
+  ]
+  const renames = new Map([['o/old:.', 'o/new:.']])
+  const counted = list => applyDuplicatesWithRenames(mods(), list, renames).filter(m => m.kind === 'mod').map(m => m.id)
+  assert.deepEqual(counted(new Map([['o/new:.', 'o/market:p']])), ['o/market:p'], 'listed under the current name')
+  assert.deepEqual(counted(new Map([['o/old:.', 'o/market:p']])), ['o/market:p'], 'listed under the old name')
+  assert.deepEqual(counted(new Map([['o/old:.', 'o/new:.']])), ['o/new:.', 'o/market:p'], 'a listed rename that the scan also detects')
+  assert.deepEqual(counted(new Map()), ['o/new:.', 'o/market:p'])
 })
 
 test('the change list names a collapse and a suspected pair', () => {

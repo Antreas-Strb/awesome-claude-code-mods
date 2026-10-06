@@ -9,7 +9,7 @@ A daily scan searches GitHub code for repositories that mention `CLAUDE_CODE_ENA
 ## Open a pull request
 
 1. Add your `owner/repo` to `data/seeds.txt`, one per line.
-   If you moved a mod to a new repo and the table lists both, add the pair to `data/duplicates.txt` so the old copy stops counting.
+   If you renamed a repository on GitHub, nothing is needed: the scan reads the current name and counts each plugin once, under that name. If you moved a mod to a different repository and the table lists both, add the pair to `data/duplicates.txt` so the old copy stops counting.
    A repo that repackages other authors' mods as a catalogue goes in `data/catalogs.txt`: it is named once with its count rather than listed per copy.
    If the scan files an installable mod as test material only because of its folder name (such as `bench` or `probe`), add its id to `data/fixture-exceptions.txt`.
 

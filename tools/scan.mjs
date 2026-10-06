@@ -12,7 +12,7 @@ import { tmpdir } from 'node:os'
 import { validate } from './validate.mjs'
 import { uiRewriteReview, marketplacesFor } from './compatibility.mjs'
 import { grade, visibility, drawsOn } from './grade.mjs'
-import { readDuplicates, applyDuplicates, suspectDuplicates } from './dedupe.mjs'
+import { readDuplicates, applyDuplicatesWithRenames, suspectDuplicates, renamePairs } from './dedupe.mjs'
 import { kindOf, readCatalogs, readFixtureExceptions } from './kind.mjs'
 import { parseArgs } from 'node:util'
 import { readRepos, mergeRepos } from './candidates.mjs'
@@ -65,7 +65,7 @@ function* hooksFiles(dir) {
 function meta(repo) {
   try {
     const j = JSON.parse(execFileSync('gh', ['api', `repos/${repo}`, '--jq',
-      '{stars:.stargazers_count,pushedAt:.pushed_at,createdAt:.created_at,license:(.license.spdx_id // null),description:.description,defaultBranch:.default_branch,archived:.archived}'],
+      '{fullName:.full_name,stars:.stargazers_count,pushedAt:.pushed_at,createdAt:.created_at,license:(.license.spdx_id // null),description:.description,defaultBranch:.default_branch,archived:.archived}'],
       { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }))
     return j
   } catch { return { stars: null } }
@@ -74,6 +74,7 @@ function meta(repo) {
 function readJson(p) { try { return JSON.parse(readFileSync(p, 'utf8')) } catch { return null } }
 
 const metas = metaBatch(repos)
+const currentName = new Map()
 let mods = []
 const seen = new Set()
 const marketplaceResults = new Map()
@@ -85,6 +86,7 @@ for (const repo of repos) {
   const roots = [dir, join(CLONES, repo.replace('/', '__')), realpathSync(CLONES), CLONES]
   let complete = true
   const m = metas.get(repo.toLowerCase()) ?? meta(repo)
+  if (m.fullName) currentName.set(repo.toLowerCase(), m.fullName)
   for (const hooksPath of hooksFiles(dir)) {
     const hooks = readJson(hooksPath)
     if (!hooks || typeof hooks !== 'object' || Array.isArray(hooks) || ('modules' in hooks && !Array.isArray(hooks.modules))) {
@@ -146,6 +148,7 @@ for (const repo of repos) {
 }
 
 if (args.required) checkRequired(readRepos(args.required), mods, checkedRepos)
+const freshIds = new Set(mods.map(mod => mod.id))
 const inventory = reconcile(previous, mods, checkedRepos, args.retire)
 mods = inventory.mods
 if (args.retire) {
@@ -158,7 +161,9 @@ if (args.retire) {
     repos: removed.map(repo => ({ repo, revision: checkedRepos.get(repo.toLowerCase()), reason: 'no hook modules in a fresh checkout' })),
   }, null, 2) + '\n')
 }
-applyDuplicates(mods, readDuplicates())
+const renames = renamePairs(mods, currentName, freshIds)
+applyDuplicatesWithRenames(mods, readDuplicates(), renames)
+for (const [old, current] of renames) console.log(`renamed  ${old} is ${current}`)
 for (const pair of suspectDuplicates(mods)) console.log(`possible duplicate: ${pair.join(' and ')} share an owner and a name; if they are one mod, add the pair to data/duplicates.txt`)
 mods.sort((a, b) => (b.stars ?? -1) - (a.stars ?? -1) || a.id.localeCompare(b.id))
 mkdirSync(dirname(OUT), { recursive: true })

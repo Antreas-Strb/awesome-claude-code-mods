@@ -4,7 +4,7 @@
 
 import { execFileSync } from 'node:child_process'
 
-const FIELDS = 'stargazerCount pushedAt createdAt description isArchived licenseInfo { spdxId } defaultBranchRef { name }'
+const FIELDS = 'nameWithOwner stargazerCount pushedAt createdAt description isArchived licenseInfo { spdxId } defaultBranchRef { name }'
 
 export function metaQuery(repos) {
   return 'query { ' + repos.map((repo, i) => {
@@ -19,6 +19,7 @@ export function toMeta(node) {
     stars: node.stargazerCount ?? null, pushedAt: node.pushedAt ?? null, createdAt: node.createdAt ?? null,
     license: node.licenseInfo?.spdxId ?? null, description: node.description ?? null,
     defaultBranch: node.defaultBranchRef?.name ?? null, archived: node.isArchived ?? false,
+    fullName: node.nameWithOwner ?? null,
   }
 }
 

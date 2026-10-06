@@ -45,3 +45,5 @@ JetsonChan/claude-code-mods:usage-band JetsonChan/CC-Usage-Band:usage-band
 liawzishen/git-diff-timeline:. liawzishen/claude-code-mods:git-diff-timeline
 griches/claude-xcode-mod:. griches/xcpane:.
 roy651/cc-bearings:plugins/bearings roy651/cc-plugins:plugins/bearings
+brunolca/claude-agents-proto-mode:. brunolca/claude-plugins:plugins/prototype-mode
+brunolca/claude-code-terminal:plugins/worktree-terminal brunolca/claude-plugins:plugins/worktree-terminal
