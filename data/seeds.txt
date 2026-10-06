@@ -1,4 +1,5 @@
 # Repos the GitHub code search has not indexed yet. One owner/repo per line.
+3dnow/claude-mods
 halluton/Mindful-Claude
 danzerzine/claude-council
 anthropics/claude-code
