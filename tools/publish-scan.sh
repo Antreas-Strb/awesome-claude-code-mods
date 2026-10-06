@@ -31,7 +31,7 @@ for attempt in {1..8}; do
   base=$(git rev-parse origin/main)
   git switch -C "$branch" "$base"
   git branch --set-upstream-to=origin/main "$branch"
-  node tools/scan-publication.mjs --snapshot "$snapshot"
+  node tools/scan-publication.mjs --snapshot "$snapshot" --cache "$RUNNER_TEMP/scan-revalidation.json"
   set +e
   node tools/changed.mjs > "$RUNNER_TEMP/scan-changes.txt"
   rc=$?

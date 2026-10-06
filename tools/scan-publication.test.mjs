@@ -1,11 +1,12 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { execFileSync, spawnSync } from 'node:child_process'
-import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { reconcileScan } from './scan-publication.mjs'
+import { revalidatePublished } from './revalidate-publication.mjs'
 
 const mod = (repo, extra = {}) => ({ id: `${repo}:.`, repo, kind: 'mod', name: repo.split('/')[1], path: '.', description: 'A mod.', url: `https://github.com/${repo}`, stars: 1, reach: { level: 0, labels: [] }, sees: [], hooks: [], calls: [], surfaceModules: [], validate: { status: 'passed', claudeVersion: '2.1.287', errors: [] }, ...extra })
 const inventory = mods => ({ generated: '2026-01-01T00:00:00Z', claudeVersion: '2.1.287', repos: new Set(mods.map(m => m.repo)).size, mods })
@@ -38,11 +39,59 @@ test('a new main repository supersedes a scan copy, including all of its plugins
   assert.deepEqual(result.inventory.mods, latest.mods)
 })
 
-test('validator conflicts and broken duplicate targets require a fresh scan', () => {
-  assert.throws(() => merge(inventory([]), inventory([]), inventory([mod('o/new', { validate: { status: 'passed', claudeVersion: '2.1.288' } })])), /different validator/)
+test('only concurrent records with an older validator need revalidation', () => {
+  const before = inventory([mod('o/old')])
+  const scan = { ...inventory([mod('o/old', { validate: { claudeVersion: '2.1.290', status: 'passed' } })]), claudeVersion: '2.1.290' }
+  const latest = inventory([...before.mods, mod('o/new', { sourceCommit: 'a'.repeat(40), kind: 'catalog' })])
+  let checked
+  const result = reconcileScan(before, scan, latest, repos(before), repos(scan), repos(latest), [], (records, version) => {
+    checked = records
+    return records.map(record => ({ ...record, validate: { status: 'failed', claudeVersion: version, errors: ['new validator error'] } }))
+  })
+  assert.deepEqual(checked, [latest.mods[1]])
+  assert.equal(result.inventory.mods.find(m => m.repo === 'o/new').kind, 'catalog')
+  assert.ok(result.inventory.mods.every(m => m.validate.claudeVersion === '2.1.290'))
+  assert.equal(result.inventory.mods.find(m => m.repo === 'o/new').validate.status, 'failed')
+})
+
+test('broken duplicate targets still require a fresh scan', () => {
   const before = inventory([mod('o/keeper')])
   const scan = inventory([...before.mods, mod('o/copy', { kind: 'duplicate', duplicateOf: 'o/keeper:.' })])
   assert.throws(() => merge(before, scan, inventory([])), /Duplicate keeper changed/)
+})
+
+test('revalidation refreshes marketplace evidence, caches exact records and rejects incomplete results', () => {
+  const record = mod('o/new', { sourceCommit: 'a'.repeat(40), kind: 'duplicate', duplicateOf: 'o/keeper:.' })
+  const cache = {}, versions = [], paths = [], validations = []
+  const deps = {
+    ensureVersion: version => versions.push(version),
+    checkout: (repo, revision, dir) => {
+      assert.equal(repo, record.repo)
+      assert.equal(revision, record.sourceCommit)
+      paths.push(dir)
+      mkdirSync(join(dir, '.claude-plugin'))
+      writeFileSync(join(dir, '.claude-plugin/plugin.json'), '{"name":"new"}')
+      writeFileSync(join(dir, '.claude-plugin/marketplace.json'), '{"name":"market","plugins":[{"name":"new","source":"./"}]}')
+    },
+    validate: path => {
+      validations.push(path)
+      return { status: path.endsWith('marketplace.json') ? 'failed' : 'passed', errors: [], modules: [{ hooks: [{ event: 'prompt.submit', matcher: {} }], calls: ['$.fs.write'], surfaceModules: [] }] }
+    },
+  }
+  const [updated] = revalidatePublished([record], '2.1.290', cache, deps)
+  assert.equal(updated.kind, 'duplicate')
+  assert.equal(updated.duplicateOf, 'o/keeper:.')
+  assert.equal(updated.validate.claudeVersion, '2.1.290')
+  assert.equal(updated.marketplaces[0].status, 'failed')
+  assert.equal(updated.reach.level, 2)
+  assert.deepEqual(updated.sees, ['every prompt'])
+  assert.deepEqual(revalidatePublished([record], '2.1.290', cache, deps), [updated])
+  assert.equal(validations.length, 2)
+  assert.deepEqual(versions, ['2.1.290'])
+  assert.ok(paths.every(path => !existsSync(path)))
+  assert.throws(() => revalidatePublished([record], '2.1.291', cache, { ...deps, validate: () => ({ status: 'unknown' }) }), /Revalidation incomplete/)
+  assert.ok(paths.every(path => !existsSync(path)))
+  assert.throws(() => revalidatePublished([{ ...record, sourceCommit: null }], '2.1.290', {}, deps), /Missing pinned source/)
 })
 
 test('concurrent additions cannot disguise a partial scan or roll back a newer full scan', () => {
@@ -59,7 +108,7 @@ test('repository casing and record order alone do not change the reconciliation 
   assert.equal(merge(before, scan, latest).inventory.mods[0].description, 'Fresh.')
 })
 
-test('scan publication retries concurrent merges and refreshes the open PR without rescanning', t => {
+for (const mixedVersion of [false, true]) test(`scan publication retries concurrent merges with ${mixedVersion ? 'mixed' : 'matching'} validators without a full rescan`, t => {
   const root = mkdtempSync(join(tmpdir(), 'scan-publication-'))
   t.after(() => rmSync(root, { recursive: true, force: true }))
   const remote = join(root, 'remote.git'), checkout = join(root, 'checkout'), bin = join(root, 'bin'), runner = join(root, 'runner')
@@ -70,6 +119,20 @@ test('scan publication retries concurrent merges and refreshes the open PR witho
   git('init', '-b', 'fixture')
   git('remote', 'add', 'origin', remote)
   cpSync(fileURLToPath(new URL('.', import.meta.url)), join(checkout, 'tools'), { recursive: true })
+  symlinkSync(fileURLToPath(new URL('../node_modules', import.meta.url)), join(checkout, 'node_modules'))
+  writeFileSync(join(checkout, '.gitignore'), 'node_modules\n')
+  const source = join(root, 'source')
+  mkdirSync(source)
+  git('init', '-b', 'fixture', source)
+  mkdirSync(join(source, '.claude-plugin'))
+  writeFileSync(join(source, '.claude-plugin/plugin.json'), '{"name":"published"}')
+  writeFileSync(join(source, 'proof.txt'), 'published revision')
+  git('-C', source, 'add', '.')
+  git('-C', source, 'commit', '-m', 'Published source')
+  const pinned = git('-C', source, 'rev-parse', 'HEAD')
+  writeFileSync(join(source, 'proof.txt'), 'unpublished revision')
+  git('-C', source, 'add', '.')
+  git('-C', source, 'commit', '-m', 'Later upstream change')
   mkdirSync(join(checkout, 'data'))
   const before = inventory([mod('o/old')])
   writeFileSync(join(checkout, 'data/mods.json'), JSON.stringify(before))
@@ -83,13 +146,25 @@ test('scan publication retries concurrent merges and refreshes the open PR witho
   git('commit', '-m', 'Fixture inventory')
   git('push', 'origin', 'HEAD:main')
   const originalMain = git('rev-parse', 'HEAD')
-  writeFileSync(join(checkout, 'data/mods.json'), JSON.stringify(inventory([mod('o/old', { description: 'Scanned.' }), mod('o/discovered')])))
+  const scanned = inventory([mod('o/old', { description: 'Scanned.' }), mod('o/discovered')])
+  if (mixedVersion) {
+    scanned.claudeVersion = '2.1.290'
+    for (const record of scanned.mods) record.validate.claudeVersion = '2.1.290'
+  }
+  writeFileSync(join(checkout, 'data/mods.json'), JSON.stringify(scanned))
   writeFileSync(join(checkout, 'data/repos.txt'), 'o/old\no/discovered\n')
   const log = join(root, 'commands.jsonl'), marker = join(root, 'advanced'), pr = join(root, 'pr'), other = join(root, 'contributor')
   const prelude = `#!${process.execPath}\nconst fs=require('node:fs'),cp=require('node:child_process');const args=process.argv.slice(2);fs.appendFileSync(${JSON.stringify(log)},JSON.stringify([require('node:path').basename(process.argv[1]),...args])+'\\n');const git=(...a)=>cp.execFileSync('git',a,{encoding:'utf8',stdio:['ignore','pipe','pipe']}).trim();\n`
   writeFileSync(join(bin, 'npm'), prelude + `
 if(args.join(' ')==='run render')cp.execFileSync(process.execPath,['tools/render.mjs'],{stdio:'pipe'});
 if(args.join(' ')==='run lint'){git('rev-parse','--abbrev-ref','@{upstream}');if(process.env.FAIL_LINT)process.exit(1);}
+`, { mode: 0o755 })
+  writeFileSync(join(bin, 'claude'), prelude + `
+if(args[0]==='--version'){console.log('2.1.290');}
+else {
+  if(fs.readFileSync('proof.txt','utf8')!=='published revision')throw Error('Validated the wrong revision');
+  console.log('  ❯ ./register.ts hooks: prompt.submit\\n  ❯ ./register.ts calls: $.fs.read\\n✔ Validation passed');
+}
 `, { mode: 0o755 })
   writeFileSync(join(bin, 'gh'), prelude + `
 if(args[0]==='api'){
@@ -99,7 +174,7 @@ if(args[0]==='api'){
     fs.appendFileSync(${JSON.stringify(other + '/data/seeds.txt')},'o/later\\n');
     fs.appendFileSync(${JSON.stringify(other + '/README.md')},'Contributor entry.\\n');
     const data=JSON.parse(fs.readFileSync(${JSON.stringify(other + '/data/mods.json')}));
-    data.mods.push(${JSON.stringify(mod('o/published'))});
+    data.mods.push(${JSON.stringify(mod('o/published', { sourceCommit: pinned }))});
     fs.writeFileSync(${JSON.stringify(other + '/data/mods.json')},JSON.stringify(data));
     git('-C',${JSON.stringify(other)},'switch','-c','contributor');git('-C',${JSON.stringify(other)},'add','.');git('-C',${JSON.stringify(other)},'commit','-m','Concurrent publication');git('-C',${JSON.stringify(other)},'push','origin','HEAD:main');
   }
@@ -114,7 +189,7 @@ if(args[0]==='api'){
 }else if(args[1]==='close'){fs.unlinkSync(${JSON.stringify(pr)});
 }else{throw Error('Unexpected gh call '+args.join(' '));}
 `, { mode: 0o755 })
-  const runEnv = { ...env, PATH: `${bin}:${process.env.PATH}`, RUNNER_TEMP: runner, GITHUB_REPOSITORY: 'example/mods', GITHUB_RUN_ID: '1' }
+  const runEnv = { ...env, PATH: `${bin}:${process.env.PATH}`, RUNNER_TEMP: runner, GITHUB_REPOSITORY: 'example/mods', GITHUB_RUN_ID: '1', GIT_CONFIG_COUNT: '1', GIT_CONFIG_KEY_0: `url.file://${source}.insteadOf`, GIT_CONFIG_VALUE_0: 'https://github.com/o/published' }
   const run = (...args) => execFileSync('bash', ['tools/publish-scan.sh', ...args], { cwd: checkout, env: runEnv, stdio: 'pipe' })
   run()
   const proposed = () => JSON.parse(git('--git-dir', remote, 'show', 'nightly-scan:data/mods.json'))
@@ -126,6 +201,10 @@ if(args[0]==='api'){
   const calls = () => readFileSync(log, 'utf8').trim().split('\n').map(line => JSON.parse(line))
   assert.equal(calls().filter(call => call.join(' ') === 'npm run render').length, 3)
   assert.match(git('--git-dir', remote, 'show', 'nightly-scan:README.md'), /Merged after PR creation/)
+  const published = proposed().mods.find(m => m.repo === 'o/published')
+  assert.equal(published.validate.claudeVersion, scanned.claudeVersion)
+  assert.equal(published.sourceCommit, pinned)
+  assert.equal(calls().filter(call => call.slice(0, 3).join(' ') === 'claude plugin validate').length, mixedVersion ? 1 : 0, 'retries reuse the pinned revalidation')
 
   writeFileSync(join(other, 'README.md'), readFileSync(join(other, 'README.md'), 'utf8') + 'Another contributor.\n')
   git('-C', other, 'add', '.')

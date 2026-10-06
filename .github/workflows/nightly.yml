@@ -30,17 +30,14 @@ permissions:
   contents: write
   pull-requests: write
 
-# Scans and refreshes share the scan branch. PR checks have their own groups.
-# Main pushes coalesce pending runs without cancelling the active scan.
-concurrency:
-  group: ${{ github.event_name == 'pull_request' && format('scan-pr-{0}', github.event.pull_request.number) || 'scan' }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
-
 jobs:
   refresh:
     if: github.event_name == 'push' || github.event_name == 'workflow_run'
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    concurrency:
+      group: scan
+      queue: max
     steps:
       - uses: actions/checkout@v4
         with:
@@ -64,11 +61,15 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: bash tools/publish-scan.sh --refresh
   scan:
-    if: github.event_name != 'push' && github.event_name != 'workflow_run'
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
-    steps:
+    concurrency:
+      group: scan-pr-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
+    steps: &scan_steps
       - uses: actions/checkout@v4
         with:
+          ref: ${{ github.event_name == 'pull_request' && github.ref || 'main' }}
           fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
@@ -159,3 +160,10 @@ jobs:
           export SCAN_FORCE="$FORCE"
           if [ "$MODE" = full ] && [ "$(date -u +%u)" = 7 ]; then export SCAN_FORCE=true; fi
           bash tools/publish-scan.sh
+  discover:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: scan
+      queue: max
+    steps: *scan_steps
