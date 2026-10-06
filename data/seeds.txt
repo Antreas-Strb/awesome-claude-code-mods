@@ -27,6 +27,7 @@ xuanji86/claude-statuspane
 xuanji86/claude-agentpane
 shimo4228/harness-scope
 helenkwok/gsd-status-mod
+gerricchaplin/pr-pulse
 xuanji86/claude-mdview
 adamholter/claude-subway-surfers
 agentic-workbench/agent-quick-menu
