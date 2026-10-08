@@ -59,3 +59,8 @@ jessetsai1024/claude-mods:prompts jessetsai1024/claude-prompts:.
 jessetsai1024/claude-mods:timeline jessetsai1024/claude-timeline:.
 jessetsai1024/claude-mods:tokens jessetsai1024/claude-tokens:.
 tommy5dollar/claude-mods:effort-router tommy5dollar/claude-plugins:effort-router
+dvakatsiienko/frame:home/.claude/plugin-x/mods/breather dvakatsiienko/frame:home/.claude/plugin-x/mods/x-mod-breather
+dvakatsiienko/frame:home/.claude/plugin-x/mods/guard dvakatsiienko/frame:home/.claude/plugin-x/mods/x-mod-guard
+dvakatsiienko/frame:home/.claude/plugin-x/mods/redact dvakatsiienko/frame:home/.claude/plugin-x/mods/x-mod-redact
+dvakatsiienko/frame:home/.claude/plugin-x/mods/stash dvakatsiienko/frame:home/.claude/plugin-x/mods/x-mod-stash
+natsume-777/claude-mods:plugins/token-ledger natsume-777/claude-mods:plugins/usage-ledger
