@@ -1,4 +1,5 @@
 # Repos the GitHub code search has not indexed yet. One owner/repo per line.
+Nachx639/context-canary
 3dnow/claude-mods
 halluton/Mindful-Claude
 danzerzine/claude-council
