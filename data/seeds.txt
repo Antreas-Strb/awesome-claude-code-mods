@@ -12,6 +12,7 @@ OneWave-AI/claude-code-mods
 yash-gadodia/claude-mods
 plaxagoras/clawd-tales
 kongyo2/context-view
+OG-Matcha/tessera
 BatuhanCakmakk/wavy-usage
 jarrodwatts/intermission
 hellosverre/claude-skins
