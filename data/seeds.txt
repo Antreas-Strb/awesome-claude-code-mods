@@ -54,4 +54,5 @@ twjackysu/claude-code-stock-ticker
 vynnlee/mods
 alexjacobs08/guided-mr
 SummerRiversound/review-inbox
+danilpavlov/telescope-claude-code
 valeryia-piatrova/token-hamster
