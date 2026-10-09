@@ -118,6 +118,7 @@ Read the mod's source and access details before installing. Validation checks th
 - [merge-gate](https://github.com/yash-gadodia/claude-mods/tree/main/merge-gate) - Checks merge permission for recognized Bash merge commands and selected pushes from feature branches to trunk.
 - [receipt](https://github.com/yash-gadodia/claude-mods/tree/main/receipt) - Turns the turn footer into a receipt of edits, runs and curls, never folds a destructive command into a tool group, and names an unverified claim in the spinner.
 - [blast-radius](https://github.com/hamzafer/claude-code-mods/tree/main/mods/blast-radius) - Holds recognized recursive deletes, force pushes and migrations for confirmation, previews file deletions and branch changes, and cancels if nobody answers in time.
+- [modwall](https://github.com/RadTech-Solutions/modwall) - Reads each mod's scanned footprint as it loads, labels its reach and risk, and audits, holds or refuses it by an audit, ask or allowlist policy with a blocklist.
 
 ## Memory and context
 
@@ -166,6 +167,7 @@ Read the mod's source and access details before installing. Validation checks th
 - [claude-council](https://github.com/danzerzine/claude-council) - A band above the prompt that brings GPT in as fresh eyes on a stuck question, with its answer, Claude's take and GPT's reply pasted into the chat, and can have Codex check every handover against the chat's spec and send gross violations back before the agent answers.
 - [prompt-drafts](https://github.com/vynnlee/mods/tree/main/prompt-drafts) - End a prompt with `;;` to keep it as a draft of the session instead of sending it, then `/drafts` puts it back in the prompt box from a sidebar with number keys, or from Claude Code's question dialog in a narrow terminal.
 - [mission-control](https://github.com/hamzafer/claude-code-mods/tree/main/mods/mission-control) - A pane with every subagent and tool call live, plus a code map of the files they read and write, with a Haiku call that describes each file's changes.
+- [agent-pager](https://github.com/RadTech-Solutions/agent-pager) - Pages your phone through ntfy or your own Telegram bot when a long turn ends, a question or permission prompt waits, or a turn errors, and queues your Telegram replies as prompts in the one session you pick with `/pager listen`.
 - [session-board](https://github.com/danilpavlov/telescope-claude-code) - A floating tmux popup with an fzf picker of every Claude Code session running on the machine, showing which ones wait for you, a Haiku summary of each, and a jump to the tmux window of the one you pick.
 
 ## Building mods
