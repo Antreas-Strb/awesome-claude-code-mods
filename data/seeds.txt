@@ -60,4 +60,5 @@ RadTech-Solutions/modwall
 RadTech-Solutions/agent-pager
 danilpavlov/telescope-claude-code
 valeryia-piatrova/token-hamster
+NMenzel/claude-devtools-mod
 mertkayacs/ultramod
