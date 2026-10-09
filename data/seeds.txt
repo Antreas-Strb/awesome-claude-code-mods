@@ -6,6 +6,7 @@ danzerzine/claude-council
 anthropics/claude-code
 karanb192/claude-code-mods
 karanb192/cache-tax
+lorenzh/rabe
 Anerco/effort-cycle-mod
 moduvoice/claude-code-ko-ui
 OneWave-AI/claude-code-mods

@@ -148,6 +148,7 @@ Read the mod's source and access details before installing. Validation checks th
 
 ## Agents and workflows
 
+- [rabe](https://github.com/lorenzh/rabe) - A band above the prompt and a `/rabe` pane with the session's subagents, workflows, Codex plugin jobs, background shells, monitors and cron jobs, each with live output, tokens and a stop key, plus Cost, Effects and Timeline tabs.
 - [agent-shell-watch](https://github.com/apolenkov/agent-shell-watch) - A status line and a `/shell-watch` pane for every Bash call, background task and delegated agent run of the session (Codex, Pi, Devin), with elapsed time, output freshness, the current output line and errors.
 - [agent-council](https://github.com/apolenkov/agent-council) - `/council` runs the Codex, Pi, Devin and OpenCodeReview CLIs on the working diff in parallel, which sends the diff to their providers, and merges their findings into agreements, disagreements and unique findings.
 - [autodev-core](https://github.com/djnsty23/claude-auto-dev/tree/main/plugins/autodev-core) - Brainstorm, auto, iterate, audit, review and ship commands with a prd.json sprint system.
